@@ -8,7 +8,7 @@ An interactive digital portfolio / visual-experiment website built with HTML, CS
 3. For the full animated background, keep an internet connection available so the Three.js and font CDNs can load.
 
 ## Before publishing
-- Replace `wassay7@gmail.com;.` in `index.html` with your preferred email address.
+- Replace `example@gmaiil.com;.` in `index.html` with your preferred email address.
 - Add your GitHub repository URL to the project report after creating the repository.
 - Test the site on both desktop and mobile.
 
