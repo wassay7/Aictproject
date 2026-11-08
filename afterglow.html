@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Afterglow</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05060a;--ink:#eef0ff;--mute:#8c90b3;--line:rgba(255,255,255,.22);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#05060a;--ink:#eef0ff;--mute:#8c90b3}}
+:root[data-theme="dark"]{--bg:#05060a;--ink:#eef0ff;--mute:#8c90b3}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Space Grotesk",system-ui,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.track{height:600vh}
+nav{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));right:16px;display:flex;align-items:center;gap:14px;padding:9px 18px;border:1px solid var(--line);border-radius:99px;backdrop-filter:blur(10px);background:rgba(10,10,20,.35);font-size:12px;letter-spacing:.08em}
+nav i{width:42px;height:1px;background:var(--line)}
+.cap{position:fixed;left:6vw;bottom:calc(9vh + env(safe-area-inset-bottom,0px));max-width:min(520px,88vw);transition:opacity .5s,transform .5s}
+.cap h1{margin:0 0 10px;font-size:clamp(34px,6.5vw,76px);line-height:.98;font-weight:700;letter-spacing:-.03em}
+.cap p{margin:0;color:var(--mute);max-width:40ch}
+.cap.out{opacity:0;transform:translateY(14px)}
+.menu{position:fixed;left:6vw;top:50%;transform:translateY(-50%);font-size:12px;letter-spacing:.06em;color:var(--mute);opacity:0;pointer-events:none}
+.menu b{display:block;margin-bottom:12px;color:var(--ink);font-weight:500}
+.menu a{display:block;padding:3px 0;color:var(--mute);text-decoration:none}
+.menu a:hover,.menu a:focus-visible{color:var(--ink);outline:none}
+.card{position:fixed;left:50%;top:50%;width:min(46vw,420px);aspect-ratio:16/10;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:linear-gradient(135deg,rgba(190,170,255,.32),rgba(80,200,255,.14) 55%,rgba(255,120,200,.22));backdrop-filter:blur(14px) saturate(1.4);box-shadow:0 30px 80px rgba(120,80,255,.28);opacity:0;display:flex;align-items:flex-end;padding:18px;font-size:13px;color:#fff;pointer-events:none}
+.bar{position:fixed;left:0;bottom:0;height:2px;background:linear-gradient(90deg,#4fe3ff,#ff5fd0,#ffc36b);width:0}
+@media (max-width:640px){.menu{top:22%}.card{width:64vw}}
+</style></head><body>
+<canvas id="c" aria-hidden="true"></canvas>
+<nav><span>WORK</span><i></i><span>CONTACT</span></nav>
+<div class="menu" id="menu"><b>What are you looking for?</b><a href="#websites">Websites</a><a href="#installations">Installations</a><a href="#xr">AR / VR / XR</a><a href="#multiplayer">Multiplayer</a><a href="#games">Games</a></div>
+<div class="card" id="k0">Field notes: particles that learn your cursor</div>
+<div class="card" id="k1">Tidal room: an installation in light</div>
+<div class="card" id="k2">Overgrowth: a shared world in the browser</div>
+<div class="cap" id="cap"></div>
+<div class="bar" id="bar"></div>
+<div class="track"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const N=36000,R=Math.random,TAU=Math.PI*2,g=()=>(R()+R()+R()-1.5)/1.5;
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mk=f=>{const a=new Float32Array(N*3);for(let i=0;i<N;i++)a.set(f(i/N,i),i*3);return a};
+const S=[
+ t=>{const u=t*TAU,d=1+Math.sin(u)**2;return[3.2*Math.cos(u)/d+g()*.12,3.2*Math.sin(u)*Math.cos(u)/d*1.5+g()*.12,g()*.25]},
+ (t,i)=>{const k=i%9;return[(k-4)*1.2+g()*.22+g()*(R()<.2?1.5:0),(R()-.5)*7,(R()-.5)*7-1+g()*.4]},
+ (t,i)=>{const u=t*46,s=i%2*Math.PI,r=1.4+.35*Math.sin(u*.4);return[r*Math.cos(u+s)+g()*.15,(t-.5)*9,r*Math.sin(u+s)+g()*.15]},
+ t=>{const a=R()*TAU,b=Math.acos(2*R()-1),r=2.2+.25*Math.sin(b*9)+g()*.08;return[r*Math.sin(b)*Math.cos(a),r*Math.cos(b),r*Math.sin(b)*Math.sin(a)]},
+ ()=>[(R()-.5)*14,(R()-.5)*1.6+g()*.4,(R()-.5)*9]
+];
+const T=S.map(s=>mk(s)),cur=new Float32Array(T[0]),seed=new Float32Array(N).map(R);
+const PAL=[[[.3,.9,1],[1,1,1]],[[1,.72,.2],[.35,.9,.4]],[[1,.3,.8],[.3,.8,1]],[[.55,.4,1],[.3,.5,1]],[[.6,.65,.9],[.9,.9,1]]];
+const cv=document.getElementById('c'),ren=new THREE.WebGLRenderer({canvas:cv,antialias:false,alpha:false});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setClearColor(0x05060a);
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(55,1,.1,60);cam.position.z=7;
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(cur,3).setUsage(THREE.DynamicDrawUsage));
+geo.setAttribute('seed',new THREE.BufferAttribute(seed,1));
+const U={uT:{value:0},uA:{value:new THREE.Color()},uB:{value:new THREE.Color()},uS:{value:3.2*ren.getPixelRatio()}};
+sc.add(new THREE.Points(geo,new THREE.ShaderMaterial({uniforms:U,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+vertexShader:`attribute float seed;uniform float uT,uS;varying float v;varying float m;
+void main(){vec3 p=position+.07*vec3(sin(uT+seed*30.),cos(uT*.8+seed*50.),sin(uT*.6+seed*70.));
+vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uS*(.6+seed*1.6)*(6./-mv.z);v=seed;m=smoothstep(-3.,3.,p.y);}`,
+fragmentShader:`uniform vec3 uA,uB;varying float v;varying float m;
+void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;float a=smoothstep(.5,0.,d);gl_FragColor=vec4(mix(uA,uB,m*.7+v*.3),a*.75);}`})));
+const CAP=[["Afterglow","Light that remembers where you moved."],["Overgrowth","A forest rebuilt from ten thousand sparks."],["Choose a direction","Scroll on; every thread is a different kind of world."],["Inside the lab","Where the experiments are grown."],["Stay a while","Say hello when the dust settles."]];
+const cap=document.getElementById('cap'),menu=document.getElementById('menu'),bar=document.getElementById('bar'),K=[0,1,2].map(i=>document.getElementById('k'+i));
+let tgt=0,sp=0,mx=0,my=0,cx=0,cy=0,shown=-1;
+const ease=x=>x*x*(3-2*x),win=(p,a,b)=>Math.max(0,Math.min(1,Math.min((p-a)/.06,(b-p)/.06)));
+function size(){ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+const sync=()=>{const m=document.documentElement.scrollHeight-innerHeight;tgt=m>0?scrollY/m:0};
+addEventListener('scroll',sync,{passive:true});sync();
+const cA=new THREE.Color(),cB=new THREE.Color(),t0=new THREE.Color(),t1=new THREE.Color();
+function frame(ts){
+ sp+=(tgt-sp)*(still?1:.07);const q=Math.min(sp,.9999)*4,i=Math.floor(q),f=ease(q-i),A=T[i],B=T[i+1];
+ for(let k=0;k<cur.length;k++)cur[k]=A[k]+(B[k]-A[k])*f;
+ geo.attributes.position.needsUpdate=true;
+ const pa=PAL[i],pb=PAL[i+1];
+ cA.setRGB(...pa[0]).lerp(t0.setRGB(...pb[0]),f);cB.setRGB(...pa[1]).lerp(t1.setRGB(...pb[1]),f);
+ U.uA.value.copy(cA);U.uB.value.copy(cB);U.uT.value=still?0:ts*.0006;
+ cx+=(mx-cx)*.05;cy+=(my-cy)*.05;
+ cam.position.set(cx*2.2+Math.sin(sp*6)*.8,-cy*1.6,7-sp*2.4);cam.lookAt(0,0,0);
+ const st=Math.min(4,Math.round(q));if(st!==shown){shown=st;cap.classList.add('out');setTimeout(()=>{cap.innerHTML='<h1>'+CAP[st][0]+'</h1><p>'+CAP[st][1]+'</p>';cap.classList.remove('out')},260)}
+ const w=win(sp,.4,.68);menu.style.opacity=w;
+ K.forEach((el,n)=>{const o=win(sp,.42+n*.03,.7+n*.03),s=(sp-.5)*60;
+  el.style.opacity=o*.95;el.style.transform=`translate(-50%,-50%) translate3d(${(n-1)*(innerWidth<640?20:34)+14}vw,${(n-1)*9+s*(n+1)*.12}vh,${(1-n)*80}px) rotate(${(n-1)*7}deg)`});
+ bar.style.width=sp*100+'%';
+ ren.render(sc,cam);requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script></body></html>
